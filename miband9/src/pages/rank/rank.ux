@@ -1,0 +1,212 @@
+<template>
+  <div class="rank-page">
+    <text class="title">排行榜</text>
+    <text class="user-score">我的分数: {{ score }}</text>
+    <text if="datas!=null">我的排名:{{ datas.mineRank }}</text>
+    <text type="text">{{ message }}</text>
+    <text if="message1!=null" type="text">{{ message1 }}</text>
+    <!-- 滑动容器 -->
+    <div class="rank-list" scroll-y="true">
+      <!-- 空列表时显示错误信息 -->
+      <!-- 排行榜项 -->
+      <text if="!hasNet">无排名数据</text>
+      <list else class="list1">
+        <list-item for="(index, item) in datas.infos" class="rank-item" type="item">
+          <text class="rank-index">{{ index }}.</text>
+          <text class="rank-score">{{ item.score }}</text>
+          <text class="rank-name">{{ item.value }}</text>
+          <!-- <text class="rank-score">{{ item.score }} 分</text> -->
+        </list-item>
+      </list>
+    </div>
+  </div>
+</template>
+
+<script>
+import network from "@system.network"
+import router from "@system.router"
+import fetch from "@system.fetch"
+import device from "@system.device"
+import storage from "@system.storage"
+export default {
+  private: {
+    board: Array(5),
+    mine: null,
+    message: "无网络",
+    message1: "",
+    hasNet: false,
+    datas: null,
+    score: 0,
+    rkey: "score"
+  },
+  back() {
+    router.back()
+  },
+  computed: {},
+  onInit() {
+    const t = this
+    storage.get({
+      key: t.rkey,
+      default: "0",
+      success: function (data) {
+        t.score = data
+      },
+      fail: function (data, code) {
+        console.log("get score error" + data)
+      }
+    })
+
+    network.getType({
+      success: function (data) {
+        console.log(`handling success: ${data.type}`)
+        t.message = "网络连接：" + data.type
+        t.hasNet = true
+        t.fentchApi()
+        t.updaloadRank()
+      },
+      fail: function (data, code) {
+        t.message = "无网络：" + code
+      }
+    })
+  },
+  async fentchApi() {
+    let t = this
+    let device = await this.fetchDeviceDataPromise()
+    t.mine = device.IMEI
+    fetch.fetch({
+      url: "http://api.bilibili.asia/band/rank/band?user=" + t.mine,
+      responseType: "text",
+      success: function (response) {
+        console.log(`the data of the response: ${response.data}`)
+        t.datas = JSON.parse(response.data)
+        console.log("t.data:" + JSON.parse(response.data).infos)
+      },
+      fail: function (data, code) {
+        console.log(`handling fail, errMsg = ${data}`)
+        t.message = "请求失败：" + data
+      }
+    })
+  },
+  async updaloadRank() {
+    try {
+      console.log("start")
+      let imei = this.mine != null ? this.mine : (await this.fetchDeviceDataPromise()).IMEI
+      if (imei == null) {
+        this.message1 ="imei get error" + imei
+        console.log("imei" + imei)
+        return
+      }
+      let score = await this.fentchScorePromise()
+      fetch.fetch({
+        url: "http://api.bilibili.asia/band/rank/band",
+        method: "POST",
+        header: {"Content-Type": "application/json"},
+        data: {value: imei, score: score},
+        responseType: "text",
+        success: function (response) {
+          console.log(`the data: ${response.data}`)
+        },
+        fail: function (data, code) {
+          console.log(`handling fail, errMsg = ${data}`)
+        }
+      })
+    } catch (e) {
+      this.message1 = "error" + e
+      console.log("error" + e)
+    }
+  },
+  fetchDeviceDataPromise() {
+    return new Promise((resolve, reject) => {
+      device.getInfo({
+        success: function (data) {
+          resolve(data)
+        },
+        fail: function (e) {
+          reject(e)
+        }
+      })
+    })
+  },
+  fentchScorePromise() {
+    let t = this
+    return new Promise((resolve, reject) => {
+      storage.get({
+        key: t.rkey,
+        default: "0",
+        success: function (data) {
+          resolve(data)
+        },
+        fail: function (data, code) {
+          reject(data)
+        }
+      })
+    })
+  }
+}
+</script>
+
+<style>
+/* @import '../../../common/comm.css'; */
+.rank-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.title {
+  font-size: 32px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.user-score {
+  font-size: 24px;
+  margin-bottom: 30px;
+}
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  /* 占满剩余空间 */
+  width: 100%;
+  overflow-y: auto;
+  /* 设置背景色来区分区域 */
+  border-top: 1px solid #ccc;
+  margin-top: 10px;
+}
+
+.list1 {
+  width: 100%;
+  flex: 1;
+  /* 使 list 填满 rank-list 的高度 */
+  background-color: #000000;
+  /* 列表背景色 */
+}
+
+.rank-item {
+  height: 40px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border: 1px solid #fff;
+}
+
+.rank-index {
+  font-size: 22px;
+  width: 40px;
+}
+
+.rank-score {
+  font-size: 20px;
+  padding-right: 5px;
+}
+
+.rank-name {
+  font-size: 20px;
+  flex: 1;
+  text-align: left;
+}
+</style>
