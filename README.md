@@ -1,5 +1,12 @@
 # 小米手环9pro快应用 五子棋
+<div align="center">
+<img width="96" height="96" src="src/common/logo.png" alt="井字棋"/>  
 
+五子棋
+<br>
+<br>
+简单的五子棋应用
+</div>
 
 ## 快速上手
 
