@@ -1,25 +1,43 @@
 <template>
   <div class="demo-page">
-    <text class="title">{{ $t("a.b") }},欢迎打开{{ title }}</text>
+    <text class="title">你的设备{{ title }}</text>
     <!-- 点击跳转详情页 -->
-    <input class="btn" type="button" value="跳转到详情页" onclick="routeDetail" />
+    <!-- <input class="btn" type="button" value={{$t("a.b")}} onclick="routeDetail" />
+    <text class="title" onclick="routeRank">排行榜</text>
+    <text class="footer">POWER BY Github:lin945</text> -->
+
+    <text class="button" onclick="routeDetail">开始</text>
+    <text class="button" onclick="routeRank">排行榜</text>
+    <text class="footer-text">POWER BY Github:lin945</text>
   </div>
 </template>
 
 <script>
 import router from "@system.router"
-import configuration from "@system.configuration"
-
+import device from '@system.device' 
 export default {
   // 页面级组件的数据模型，影响传入数据的覆盖机制：private内定义的属性不允许被覆盖
   private: {
-    title: "示例页面"
+    title: "mi9p"
   },
-
+  onReady(){
+    const t=this
+    device.getInfo({success: function (data) {
+      t.title=data.product
+      console.log("info"+JSON.stringify(data))
+    },fail:function(e){
+      t.title=e
+    }})
+  },
   routeDetail() {
     // 跳转到应用内的某个页面，router用法详见：文档->接口->页面路由
     router.push({
       uri: "/pages/detail"
+    })
+  },
+  routeRank(){
+    router.push({
+      uri: "/pages/rank"
     })
   }
 }
@@ -27,23 +45,40 @@ export default {
 
 <style>
 .demo-page {
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 20px;
+  background-image: linear-gradient(135deg, #f0f4f7, #c1d6e3); /* 渐变背景 */
 }
 
 .title {
-  font-size: 20px;
+  font-size: 26px; /* 改小字体，适应屏幕 */
+  margin-bottom: 16px; /* 增加下方间距，避免内容紧凑 */
   text-align: center;
+  color: #333333;
+}
+.button {
+  width: 180px;
+  height: 60px;
+  border-radius: 12px;
+  border: 2px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 24px;
+  margin: 20px 0;
+  color: #333;
+  background-color: #ffffff;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.btn {
-  width: 200px;
-  height: 40px;
-  margin-top: 20px;
-  border-radius: 5px;
-  background-color: #09ba07;
-  font-size: 20px;
-  color: #ffffff;
+.footer-text {
+  font-size: 16px;
+  color: #555;
+  margin-top: 40px;
+  letter-spacing: 1px;
 }
 </style>

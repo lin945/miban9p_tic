@@ -6,15 +6,16 @@
         {{ cell }}
       </text>
     </div>
-    <text class="button" onclick="resetGame">Reset Game</text>
+    <text class="button" onclick="resetGame">{{ $t("a.c") }}</text>
   </div>
 </template>
 
 <script>
+import vibrator from "@system.vibrator"
+import storage from "@system.storage"
 export default {
   private: {
-    text: "欢迎打开详情页1",
-    board: Array(9).fill(" "),
+    board: Array(9).fill(""),
     currentPlayer: "X",
     winner: null
   },
@@ -37,10 +38,45 @@ export default {
     // 检查玩家是否获胜
     if (this.checkWin()) {
       this.winner = this.currentPlayer
+      this.vv(this.winner)
     } else {
       this.currentPlayer = "O" // 切换到AI
       setTimeout(this.makeAIMove, 500) // 延迟AI操作
     }
+  },
+  vv(winner) {
+    this.playVibrationPattern(vibrator)
+    if(winner==="X"){
+      this.addUserScore()
+    }
+  },
+  addUserScore() {
+    let key="score"
+    storage.get({
+      key: key,
+      default: "0",
+      success: function (data) {
+        let incrementedNum = (parseInt(data, 10) + 1).toString()
+        storage.set({
+          key: key,
+          value: incrementedNum,
+          success: function (data) {
+            console.log("handling success"+data)
+          },
+          fail: function (data, code) {
+            console.log(`handling fail, code = ${code}`)
+          }
+        })
+      },
+      fail: function (data, code) {
+        console.log("get score error" + data)
+      }
+    })
+  },
+  async playVibrationPattern(vibrator) {
+    vibrator.vibrate({
+      mode: "long"
+    })
   },
   makeAIMove() {
     // 找到最佳落子点
@@ -49,6 +85,7 @@ export default {
       this.board[bestMove] = this.currentPlayer
       if (this.checkWin()) {
         this.winner = this.currentPlayer
+        this.vv()
       } else {
         this.currentPlayer = "X" // 切换回玩家
       }
@@ -111,6 +148,12 @@ export default {
   width: 100%;
   max-width: 300px;
   aspect-ratio: 1 / 1;
+  background-color: rgba(255, 255, 255, 0.9);
+  /* 棋盘背景颜色 */
+  border: 4px solid #333;
+  /* 棋盘边框 */
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   /* 保持棋盘为正方形 */
 }
 
@@ -129,6 +172,7 @@ export default {
   box-sizing: border-box;
   cursor: pointer;
   user-select: none;
+  text-align: center;
 }
 
 .status {
@@ -146,5 +190,6 @@ export default {
   color: white;
   border: none;
   border-radius: 5px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

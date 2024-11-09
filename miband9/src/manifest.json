@@ -1,8 +1,8 @@
 {
   "package": "asia.bilibili.watch.mi9p",
-  "name": "miband9",
-  "versionName": "1.0.0",
-  "versionCode": 1,
+  "name": "五子棋-lin945",
+  "versionName": "1.0.2",
+  "versionCode": 10,
   "minPlatformVersion": 1000,
   "icon": "/common/logo.png",
   "deviceTypeList": [
@@ -11,6 +11,24 @@
   "features": [
     {
       "name": "system.router"
+    },
+    {
+      "name": "system.app"
+    },
+    {
+      "name": "system.vibrator"
+    },
+    {
+      "name": "system.device"
+    },
+    {
+      "name": "system.network"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.fetch"
     }
   ],
   "config": {
@@ -25,6 +43,9 @@
       },
       "pages/detail": {
         "component": "detail"
+      },
+      "pages/rank": {
+        "component": "rank"
       }
     }
   }
