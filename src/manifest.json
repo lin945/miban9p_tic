@@ -1,0 +1,52 @@
+{
+  "package": "asia.bilibili.watch.mi9p",
+  "name": "五子棋-lin945",
+  "versionName": "1.0.2",
+  "versionCode": 10,
+  "minPlatformVersion": 1000,
+  "icon": "/common/logo.png",
+  "deviceTypeList": [
+    "watch"
+  ],
+  "features": [
+    {
+      "name": "system.router"
+    },
+    {
+      "name": "system.app"
+    },
+    {
+      "name": "system.vibrator"
+    },
+    {
+      "name": "system.device"
+    },
+    {
+      "name": "system.network"
+    },
+    {
+      "name": "system.storage"
+    },
+    {
+      "name": "system.fetch"
+    }
+  ],
+  "config": {
+    "logLevel": "log",
+    "designWidth": 336
+  },
+  "router": {
+    "entry": "pages/index",
+    "pages": {
+      "pages/index": {
+        "component": "index"
+      },
+      "pages/detail": {
+        "component": "detail"
+      },
+      "pages/rank": {
+        "component": "rank"
+      }
+    }
+  }
+}

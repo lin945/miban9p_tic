@@ -1,0 +1,195 @@
+<template>
+  <div class="demo-page">
+    <text class="title">{{ message }}</text>
+    <div class="board">
+      <text for="(index,cell) in board" class="cell" onclick="makeMove(index)" tid="uniqueId">
+        {{ cell }}
+      </text>
+    </div>
+    <text class="button" onclick="resetGame">{{ $t("a.c") }}</text>
+  </div>
+</template>
+
+<script>
+import vibrator from "@system.vibrator"
+import storage from "@system.storage"
+export default {
+  private: {
+    board: Array(9).fill(""),
+    currentPlayer: "X",
+    winner: null
+  },
+  back() {
+    router.back()
+  },
+  computed: {
+    message() {
+      if (this.winner) return `Player ${this.winner} wins!`
+      if (this.board.every((cell) => cell)) return "It's a tie!"
+      return `Player ${this.currentPlayer}'s turn`
+    }
+  },
+  makeMove(index) {
+    // 如果格子已经被占用或游戏结束，直接返回
+    console.log(`makeMove = ${index} this:${this.text}`)
+    if (this.board[index] || this.winner) return
+    // 直接更新数组索引值
+    this.board[index] = this.currentPlayer
+    // 检查玩家是否获胜
+    if (this.checkWin()) {
+      this.winner = this.currentPlayer
+      this.vv(this.winner)
+    } else {
+      this.currentPlayer = "O" // 切换到AI
+      setTimeout(this.makeAIMove, 500) // 延迟AI操作
+    }
+  },
+  vv(winner) {
+    this.playVibrationPattern(vibrator)
+    if(winner==="X"){
+      this.addUserScore()
+    }
+  },
+  addUserScore() {
+    let key="score"
+    storage.get({
+      key: key,
+      default: "0",
+      success: function (data) {
+        let incrementedNum = (parseInt(data, 10) + 1).toString()
+        storage.set({
+          key: key,
+          value: incrementedNum,
+          success: function (data) {
+            console.log("handling success"+data)
+          },
+          fail: function (data, code) {
+            console.log(`handling fail, code = ${code}`)
+          }
+        })
+      },
+      fail: function (data, code) {
+        console.log("get score error" + data)
+      }
+    })
+  },
+  async playVibrationPattern(vibrator) {
+    vibrator.vibrate({
+      mode: "long"
+    })
+  },
+  makeAIMove() {
+    // 找到最佳落子点
+    const bestMove = this.findBestMove()
+    if (bestMove !== -1) {
+      this.board[bestMove] = this.currentPlayer
+      if (this.checkWin()) {
+        this.winner = this.currentPlayer
+        this.vv()
+      } else {
+        this.currentPlayer = "X" // 切换回玩家
+      }
+    }
+  },
+  findBestMove() {
+    // 检查AI是否可以获胜或阻止玩家获胜
+    for (const player of ["O", "X"]) {
+      for (let i = 0; i < 9; i++) {
+        if (!this.board[i]) {
+          this.board[i] = player
+          const win = this.checkWin()
+          this.board[i] = "" // 回滚
+          if (win) return i // 返回可以获胜或阻止玩家的位置
+        }
+      }
+    }
+    // 随机选择空位
+    const emptyCells = this.board
+      .map((cell, index) => (cell === "" ? index : null))
+      .filter((index) => index !== null)
+    return emptyCells.length > 0 ? emptyCells[Math.floor(Math.random() * emptyCells.length)] : -1
+  },
+  checkWin() {
+    const winningCombinations = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6]
+    ]
+    return winningCombinations.some((combination) => {
+      const [a, b, c] = combination
+      return this.board[a] && this.board[a] === this.board[b] && this.board[a] === this.board[c]
+    })
+  },
+  resetGame() {
+    console.log(`resetGame`)
+    this.board = Array(9).fill("")
+    this.currentPlayer = "X"
+    this.winner = null
+  }
+}
+</script>
+
+<style>
+.demo-page {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.board {
+  display: flex;
+  flex-wrap: wrap;
+  /* 实现网格布局的替代方案 */
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1 / 1;
+  background-color: rgba(255, 255, 255, 0.9);
+  /* 棋盘背景颜色 */
+  border: 4px solid #333;
+  /* 棋盘边框 */
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  /* 保持棋盘为正方形 */
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 33.33%;
+  /* 每行3个单元格 */
+  height: 33.33%;
+  /* 确保单元格高度均分 */
+  font-size: 32px;
+  background-color: #f3f3f3;
+  color: black;
+  border: 1px solid #333;
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+}
+
+.status {
+  margin-top: 10px;
+  font-size: 24px;
+  text-align: center;
+}
+
+.button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 20px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+</style>
